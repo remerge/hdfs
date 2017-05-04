@@ -182,7 +182,7 @@ func getClient(namenode string) (*hdfs.Client, error) {
 		return nil, errors.New("Couldn't find a namenode to connect to. You should specify hdfs://<namenode>:<port> in your paths. Alternatively, set HADOOP_NAMENODE or HADOOP_CONF_DIR in your environment.")
 	}
 
-	c, err := hdfs.New(namenode)
+	c, err := hdfs.New([]string{namenode})
 	if err != nil {
 		return nil, err
 	}

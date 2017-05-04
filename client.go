@@ -31,41 +31,42 @@ func Username() (string, error) {
 }
 
 // New returns a connected Client, or an error if it can't connect. The user
-// will be the user the code is running under. If address is an empty string
-// it will try and get the namenode address from the hadoop configuration
+// will be the user the code is running under. If addresses is an empty slice
+// it will try and get the namenode addresses from the hadoop configuration
 // files.
-func New(address string) (*Client, error) {
+func New(addresses []string) (*Client, error) {
 	username, err := Username()
 	if err != nil {
 		return nil, err
 	}
 
-	if address == "" {
+	if len(addresses) == 0 {
 		var nnErr error
-		address, nnErr = getNameNodeFromConf()
+		addresses, nnErr = getNamenodesFromConf()
 		if nnErr != nil {
 			return nil, nnErr
 		}
 	}
 
-	return NewForUser(address, username)
+	return NewForUser(addresses, username)
 }
 
-// getNameNodeFromConf return a datanode from the system hadoop configuration
-func getNameNodeFromConf() (string, error) {
+// getNamenodesFromConf returns namenode addresses from the system hadoop
+// configuration
+func getNamenodesFromConf() ([]string, error) {
 	hadoopConf := LoadHadoopConf("")
 
 	namenodes, nnErr := hadoopConf.Namenodes()
 	if nnErr != nil {
-		return "", nnErr
+		return nil, nnErr
 	}
-	return namenodes[0], nil
+	return namenodes, nil
 }
 
 // NewForUser returns a connected Client with the user specified, or an error if
 // it can't connect.
-func NewForUser(address string, user string) (*Client, error) {
-	namenode, err := rpc.NewNamenodeConnection(address, user)
+func NewForUser(addresses []string, user string) (*Client, error) {
+	namenode, err := rpc.NewNamenodeConnection(addresses, user)
 	if err != nil {
 		return nil, err
 	}

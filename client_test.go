@@ -31,7 +31,7 @@ func getClientForUser(t *testing.T, user string) *Client {
 		t.Fatal("HADOOP_NAMENODE not set")
 	}
 
-	client, err := NewForUser(nn, user)
+	client, err := NewForUser([]string{nn}, user)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,6 +73,20 @@ func assertPathError(t *testing.T, err error, op, path string, wrappedErr error)
 	expected := &os.PathError{op, path, wrappedErr}
 	require.Equal(t, expected.Error(), err.Error())
 	require.Equal(t, expected, err)
+}
+
+func TestNewWithMultipleNodes(t *testing.T) {
+	nn := os.Getenv("HADOOP_NAMENODE")
+	if nn == "" {
+		t.Fatal("HADOOP_NAMENODE not set")
+	}
+	_, err := New([]string{"localhost:80", nn})
+	assert.Nil(t, err)
+}
+
+func TestNewWithFailingNode(t *testing.T) {
+	_, err := New([]string{"localhost:80"})
+	assert.NotNil(t, err)
 }
 
 func TestReadFile(t *testing.T) {

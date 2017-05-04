@@ -44,7 +44,7 @@ func getNamenode(t *testing.T) *NamenodeConnection {
 		t.Fatal(err)
 	}
 
-	conn, err := NewNamenodeConnection(nn, username)
+	conn, err := NewNamenodeConnection([]string{nn}, username)
 	if err != nil {
 		t.Fatal(err)
 	}
