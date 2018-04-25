@@ -80,7 +80,9 @@ func TestNewWithMultipleNodes(t *testing.T) {
 	if nn == "" {
 		t.Fatal("HADOOP_NAMENODE not set")
 	}
-	_, err := New([]string{"localhost:80", nn})
+	_, err := NewClient(ClientOptions{
+		Addresses: []string{"localhost:80", nn},
+	})
 	assert.Nil(t, err)
 }
 

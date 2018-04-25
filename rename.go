@@ -4,8 +4,8 @@ import (
 	"os"
 
 	hdfs "github.com/colinmarc/hdfs/protocol/hadoop_hdfs"
-	"github.com/colinmarc/hdfs/rpc"
 	"github.com/golang/protobuf/proto"
+	"github.com/remerge/hdfs/rpc"
 )
 
 // Rename renames (moves) a file.

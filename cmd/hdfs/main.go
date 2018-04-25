@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/colinmarc/hdfs"
 	"github.com/pborman/getopt"
+	"github.com/remerge/hdfs"
 )
 
 // TODO: cp, tree, test, trash

@@ -5,8 +5,8 @@ import (
 	"os"
 
 	hdfs "github.com/colinmarc/hdfs/protocol/hadoop_hdfs"
-	"github.com/colinmarc/hdfs/rpc"
 	"github.com/golang/protobuf/proto"
+	"github.com/remerge/hdfs/rpc"
 )
 
 // Remove removes the named file or directory.

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	hdfs "github.com/colinmarc/hdfs/protocol/hadoop_hdfs"
-	"github.com/colinmarc/hdfs/rpc"
 	"github.com/golang/protobuf/proto"
+	"github.com/remerge/hdfs/rpc"
 )
 
 // FileInfo implements os.FileInfo, and provides information about a file or
@@ -79,7 +79,7 @@ func (fi *FileInfo) Mode() os.FileMode {
 }
 
 func (fi *FileInfo) ModTime() time.Time {
-	return time.Unix(int64(fi.status.GetModificationTime())/1000, 0)
+	return time.Unix(0, int64(fi.status.GetModificationTime())*int64(time.Millisecond))
 }
 
 func (fi *FileInfo) IsDir() bool {

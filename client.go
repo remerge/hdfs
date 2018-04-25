@@ -16,6 +16,13 @@ type Client struct {
 	defaults *hdfs.FsServerDefaultsProto
 }
 
+// ClientOptions represents the configurable options for a client.
+type ClientOptions struct {
+	Addresses []string
+	Namenode  *rpc.NamenodeConnection
+	User      string
+}
+
 // Username returns the value of HADOOP_USER_NAME in the environment, or
 // the current system user if it is not set.
 func Username() (string, error) {
@@ -30,30 +37,56 @@ func Username() (string, error) {
 	return currentUser.Username, nil
 }
 
+// NewClient returns a connected Client for the given options, or an error if
+// the client could not be created.
+func NewClient(options ClientOptions) (*Client, error) {
+	var err error
+
+	if options.User == "" {
+		options.User, err = Username()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if options.Addresses == nil || len(options.Addresses) == 0 {
+		options.Addresses, err = getNameNodeFromConf()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if options.Namenode == nil {
+		options.Namenode, err = rpc.NewNamenodeConnectionWithOptions(
+			rpc.NamenodeConnectionOptions{
+				Addresses: options.Addresses,
+				User:      options.User,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Client{namenode: options.Namenode}, nil
+}
+
 // New returns a connected Client, or an error if it can't connect. The user
 // will be the user the code is running under. If addresses is an empty slice
 // it will try and get the namenode addresses from the hadoop configuration
 // files.
 func New(addresses []string) (*Client, error) {
-	username, err := Username()
-	if err != nil {
-		return nil, err
+	options := ClientOptions{}
+
+	if len(addresses) > 0 {
+		options.Addresses = addresses
 	}
 
-	if len(addresses) == 0 {
-		var nnErr error
-		addresses, nnErr = getNamenodesFromConf()
-		if nnErr != nil {
-			return nil, nnErr
-		}
-	}
-
-	return NewForUser(addresses, username)
+	return NewClient(options)
 }
 
-// getNamenodesFromConf returns namenode addresses from the system hadoop
-// configuration
-func getNamenodesFromConf() ([]string, error) {
+// getNameNodeFromConf returns namenodes from the system Hadoop configuration.
+func getNameNodeFromConf() ([]string, error) {
 	hadoopConf := LoadHadoopConf("")
 
 	namenodes, nnErr := hadoopConf.Namenodes()
@@ -65,19 +98,22 @@ func getNamenodesFromConf() ([]string, error) {
 
 // NewForUser returns a connected Client with the user specified, or an error if
 // it can't connect.
+//
+// Deprecated: Use NewClient with ClientOptions instead.
 func NewForUser(addresses []string, user string) (*Client, error) {
-	namenode, err := rpc.NewNamenodeConnection(addresses, user)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{namenode: namenode}, nil
+	return NewClient(ClientOptions{
+		Addresses: addresses,
+		User:      user,
+	})
 }
 
 // NewForConnection returns Client with the specified, underlying rpc.NamenodeConnection.
 // You can use rpc.WrapNamenodeConnection to wrap your own net.Conn.
+//
+// Deprecated: Use NewClient with ClientOptions instead.
 func NewForConnection(namenode *rpc.NamenodeConnection) *Client {
-	return &Client{namenode: namenode}
+	client, _ := NewClient(ClientOptions{Namenode: namenode})
+	return client
 }
 
 // ReadFile reads the file named by filename and returns the contents.
@@ -111,7 +147,6 @@ func (c *Client) CopyToLocal(src string, dst string) error {
 }
 
 // CopyToRemote copies the local file specified by src to the HDFS file at dst.
-// If dst already exists, it will be overwritten.
 func (c *Client) CopyToRemote(src string, dst string) error {
 	local, err := os.Open(src)
 	if err != nil {

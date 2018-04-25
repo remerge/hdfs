@@ -5,8 +5,8 @@ import (
 	"path"
 
 	hdfs "github.com/colinmarc/hdfs/protocol/hadoop_hdfs"
-	"github.com/colinmarc/hdfs/rpc"
 	"github.com/golang/protobuf/proto"
+	"github.com/remerge/hdfs/rpc"
 )
 
 // ReadDir reads the directory named by dirname and returns a list of sorted
